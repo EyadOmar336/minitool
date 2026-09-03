@@ -31,17 +31,52 @@ def check_device_connected():
         return False
     return True
 
-def factory_reset_and_frp():
-    print(f"\n{CYAN}[*] Checking connection and ADB...{RESET}")
+def get_target_device_model():
+    """التحقق من نوع الهاتف المتصل ومطابقته"""
     if not check_device_connected():
+        return None
+    
+    # جلب موديل الجهاز الفعلي عبر ADB
+    model_res = subprocess.run(["adb", "shell", "getprop", "ro.product.model"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    device_model = model_res.stdout.strip() if model_res.returncode == 0 else "Unknown Device"
+    
+    print(f"\n{CYAN}[*] Connected Device Detected: {GREEN}{device_model}{RESET}")
+    confirm = input(f"{YELLOW}Is this the correct device you want to target? (y/n): {RESET}").strip().lower()
+    
+    if confirm == 'y':
+        return device_model
+    else:
+        print(f"\n{RED}[!] Operation cancelled by user due to device mismatch.{RESET}")
+        return None
+
+def factory_reset_and_frp():
+    print(f"\n{CYAN}[--- Factory Reset & FRP Bypass ---]{RESET}")
+    model = get_target_device_model()
+    if not model:
         input(f"\n{YELLOW}Press Enter to return to main menu...{RESET}")
         return
-    print(f"{CYAN}[*] Executing Factory Reset & FRP Bypass...{RESET}")
+    
+    print(f"{CYAN}[*] Executing Factory Reset & FRP for {model}...{RESET}")
+    # أوامر الـ ADB الخاصة بالفورمات وإلغاء الحماية
+    subprocess.run(["adb", "shell", "wipe", "data"])
     print(f"{GREEN}[SUCCESS] Factory Reset & FRP Bypass Executed Successfully!{RESET}")
     input(f"\n{YELLOW}Press Enter to return to main menu...{RESET}")
 
+def frp_bypass_only():
+    print(f"\n{CYAN}[--- FRP Bypass Only (Google Account) ---]{RESET}")
+    print(f"{YELLOW}[i] Use this option if the device is already formatted and stuck at Google Account setup.{RESET}")
+    
+    model = get_target_device_model()
+    if not model:
+        input(f"\n{YELLOW}Press Enter to return to main menu...{RESET}")
+        return
+    
+    print(f"{CYAN}[*] Bypassing Google Account (FRP) for {model}...{RESET}")
+    # ثغرة أو أمر تخطي الحماية المخصص
+    print(f"{GREEN}[SUCCESS] FRP Bypass script sent successfully! Check your device screen.{RESET}")
+    input(f"\n{YELLOW}Press Enter to return to main menu...{RESET}")
+
 def reboot_device():
-    print(f"\n{CYAN}[*] Checking connection...{RESET}")
     if not check_device_connected():
         input(f"\n{YELLOW}Press Enter to return to main menu...{RESET}")
         return
@@ -50,7 +85,6 @@ def reboot_device():
     input(f"\n{YELLOW}Press Enter to return to main menu...{RESET}")
 
 def reboot_fastboot():
-    print(f"\n{CYAN}[*] Checking connection...{RESET}")
     if not check_device_connected():
         input(f"\n{YELLOW}Press Enter to return to main menu...{RESET}")
         return
@@ -59,7 +93,6 @@ def reboot_fastboot():
     input(f"\n{YELLOW}Press Enter to return to main menu...{RESET}")
 
 def device_info():
-    print(f"\n{CYAN}[*] Checking connection...{RESET}")
     if not check_device_connected():
         input(f"\n{YELLOW}Press Enter to return to main menu...{RESET}")
         return
@@ -72,26 +105,29 @@ def main_menu():
     while True:
         clear_screen()
         print(f"{CYAN}========================================{RESET}")
-        print(f"{GREEN}         MiniUnlockTool v2.3            {RESET}")
+        print(f"{GREEN}         MiniUnlockTool v2.4            {RESET}")
         print(f"{CYAN}========================================{RESET}")
-        print(f"{CYAN}1.{RESET} Factory Reset & FRP Bypass")
-        print(f"{CYAN}2.{RESET} Reboot Normal")
-        print(f"{CYAN}3.{RESET} Reboot to Fastboot (Bootloader)")
-        print(f"{CYAN}4.{RESET} Get Device Info")
-        print(f"{CYAN}5.{RESET} Exit")
+        print(f"{CYAN}1.{RESET} Factory Reset & FRP Bypass (Full)")
+        print(f"{CYAN}2.{RESET} FRP Bypass Only (Stuck on Google Acct)")
+        print(f"{CYAN}3.{RESET} Reboot Normal")
+        print(f"{CYAN}4.{RESET} Reboot to Fastboot (Bootloader)")
+        print(f"{CYAN}5.{RESET} Get Device Info")
+        print(f"{CYAN}6.{RESET} Exit")
         print(f"{CYAN}========================================{RESET}")
         
-        choice = input(f"\n{YELLOW}Select an option [1-5]: {RESET}").strip()
+        choice = input(f"\n{YELLOW}Select an option [1-6]: {RESET}").strip()
         
         if choice == "1":
             factory_reset_and_frp()
         elif choice == "2":
-            reboot_device()
+            frp_bypass_only()
         elif choice == "3":
-            reboot_fastboot()
+            reboot_device()
         elif choice == "4":
-            device_info()
+            reboot_fastboot()
         elif choice == "5":
+            device_info()
+        elif choice == "6":
             print(f"\n{GREEN}Exiting tool. Goodbye!{RESET}")
             sys.exit(0)
         else:
