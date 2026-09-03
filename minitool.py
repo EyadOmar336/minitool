@@ -3,7 +3,7 @@ import sys
 import os
 import time
 
-# تعريف الألوان الاحترافية
+# تعريف الألوان الاحترافية المحدثة
 GREEN = "\033[92m"
 RED = "\033[91m"
 YELLOW = "\033[93m"
@@ -16,7 +16,7 @@ def clear_screen():
     os.system('clear' if os.name == 'posix' else 'cls')
 
 def show_loading(message, seconds=2):
-    """دالة لعمل تأثير التحميل المتحرك بشكل أنيق"""
+    """دالة لتحميل العبارات بشكل متحرك وأنيق"""
     chars = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
     end_time = time.time() + seconds
     i = 0
@@ -27,6 +27,18 @@ def show_loading(message, seconds=2):
         i += 1
     sys.stdout.write(f"\r" + " " * (len(message) + 4) + "\r")
     sys.stdout.flush()
+
+def show_progress_bar(message, total_seconds=3):
+    """شريط تحميل احترافي خاص بعمليات الفورمات"""
+    print(f"\n{YELLOW}{message}{RESET}")
+    width = 30
+    for i in range(width + 1):
+        percent = int(i / width * 100)
+        bar = "█" * i + "-" * (width - i)
+        sys.stdout.write(f"\r{CYAN}[{bar}] {percent}%{RESET}")
+        sys.stdout.flush()
+        time.sleep(total_seconds / width)
+    print("\n")
 
 def check_adb():
     try:
@@ -67,14 +79,13 @@ def get_target_device_model():
         return None
 
 def factory_reset_and_frp():
-    print(f"\n{CYAN}[--- Factory Reset & FRP Bypass ---]{RESET}")
+    print(f"\n{BLUE}[--- Factory Reset & FRP Bypass ---]{RESET}")
     model = get_target_device_model()
     if not model:
         input(f"\n{YELLOW}Press Enter to return to main menu...{RESET}")
         return
     
-    show_loading("Preparing system wipe & FRP bypass...", 2.5)
-    print(f"{CYAN}[*] Executing Factory Reset & FRP for {model}...{RESET}")
+    show_progress_bar("Formatting & Bypassing FRP...", 3)
     res = subprocess.run(["adb", "shell", "wipe", "data"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     if res.returncode == 0:
         print(f"{GREEN}[SUCCESS] Factory Reset & FRP Bypass Executed Successfully!{RESET}")
@@ -83,26 +94,24 @@ def factory_reset_and_frp():
     input(f"\n{YELLOW}Press Enter to return to main menu...{RESET}")
 
 def frp_bypass_only():
-    print(f"\n{CYAN}[--- FRP Bypass Only (Google Account) ---]{RESET}")
+    print(f"\n{BLUE}[--- FRP Bypass Only (Google Account) ---]{RESET}")
     model = get_target_device_model()
     if not model:
         input(f"\n{YELLOW}Press Enter to return to main menu...{RESET}")
         return
     
     show_loading("Bypassing Google Account protection...", 2)
-    print(f"{CYAN}[*] Bypassing Google Account (FRP) for {model}...{RESET}")
-    print(f"{GREEN}[SUCCESS] FRP Bypass script sent successfully!{RESET}")
+    print(f"{GREEN}[SUCCESS] FRP Bypass script sent successfully for {model}!{RESET}")
     input(f"\n{YELLOW}Press Enter to return to main menu...{RESET}")
 
 def remove_screen_lock_root():
-    print(f"\n{CYAN}[--- Remove Screen Lock (Root / No Data Loss) ---]{RESET}")
+    print(f"\n{BLUE}[--- Remove Screen Lock (Root / No Data Loss) ---]{RESET}")
     model = get_target_device_model()
     if not model:
         input(f"\n{YELLOW}Press Enter to return to main menu...{RESET}")
         return
     
     show_loading("Checking Root permissions & lock files...", 2.5)
-    print(f"{CYAN}[*] Attempting to remove screen lock via Root...{RESET}")
     commands = ["su", "rm /data/system/gesture.key", "rm /data/system/password.key", "rm /data/system/locksettings.db"]
     full_cmd = " && ".join(commands)
     res = subprocess.run(["adb", "shell", full_cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -145,7 +154,7 @@ def device_info():
     input(f"\n{YELLOW}Press Enter to return to main menu...{RESET}")
 
 def brand_and_model_database_search():
-    """الخيار رقم 7: البحث المخصص عن ماركات الهواتف مع التحقق التام من الاتصال"""
+    """مركز الهواتف المحدث: Oppo A1k أولاً، وخيار البحث عبر زر s"""
     if not check_device_connected():
         input(f"\n{YELLOW}Press Enter to return to main menu...{RESET}")
         return
@@ -154,65 +163,71 @@ def brand_and_model_database_search():
     print(f"{MAGENTA}========================================{RESET}")
     print(f"{GREEN}      Global Brands & Models Hub        {RESET}")
     print(f"{MAGENTA}========================================{RESET}")
-    print(f"{CYAN}1.{RESET} Samsung")
-    print(f"{CYAN}2.{RESET} Xiaomi / Redmi")
-    print(f"{CYAN}3.{RESET} Oppo / Realme")
+    print(f"{CYAN}1.{RESET} Oppo a1k")
+    print(f"{CYAN}2.{RESET} Samsung")
+    print(f"{CYAN}3.{RESET} Xiaomi / Redmi")
     print(f"{CYAN}4.{RESET} Vivo")
     print(f"{CYAN}5.{RESET} Huawei / Honor")
     print(f"{CYAN}6.{RESET} Infinix / Tecno")
-    print(f"{CYAN}7.{RESET} Custom Search by Brand/Model Name")
-    print(f"{CYAN}8.{RESET} Back to Main Menu")
+    print(f"{YELLOW}[s]{RESET} Search by Brand or Model Name (Custom)")
+    print(f"{CYAN}7.{RESET} Back to Main Menu")
     print(f"{MAGENTA}========================================{RESET}")
     
-    choice = input(f"\n{YELLOW}Select Brand [1-8]: {RESET}").strip()
+    choice = input(f"\n{YELLOW}Select Option [1-6, s, 7]: {RESET}").strip().lower()
     
-    if choice in ["1", "2", "3", "4", "5", "6", "7"]:
-        brand_names = {
-            "1": "Samsung", "2": "Xiaomi/Redmi", "3": "Oppo/Realme", 
-            "4": "Vivo", "5": "Huawei/Honor", "6": "Infinix/Tecno", "7": "Custom Device"
-        }
-        
-        selected_brand = brand_names.get(choice, "Selected")
-        
-        if choice == "7":
-            custom_name = input(f"\n{YELLOW}Enter Brand or Model Name to search: {RESET}").strip()
-            selected_brand = custom_name if custom_name else "Custom Device"
-            
-        show_loading(f"Searching database for {selected_brand}...", 2)
-        print(f"\n{GREEN}[+] Target Brand/Model Selected: {CYAN}{selected_brand}{RESET}")
-        
-        print(f"\n{MAGENTA}--- Select Operation for {selected_brand} ---{RESET}")
-        print(f"{CYAN}1.{RESET} Factory Reset with FRP Bypass")
-        print(f"{CYAN}2.{RESET} FRP Bypass Only (Google Account)")
-        print(f"{CYAN}3.{RESET} Return to Brands Menu")
-        
-        sub_choice = input(f"\n{YELLOW}Select option [1-3]: {RESET}").strip()
-        
-        if sub_choice == "1":
-            show_loading(f"Executing Factory Reset & FRP for {selected_brand}...", 2.5)
-            res = subprocess.run(["adb", "shell", "wipe", "data"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            if res.returncode == 0:
-                print(f"{GREEN}[SUCCESS] Factory Reset & FRP executed successfully for {selected_brand}!{RESET}")
-            else:
-                print(f"{RED}[!] Operation failed. Ensure device is properly connected.{RESET}")
-            input(f"\n{YELLOW}Press Enter to continue...{RESET}")
-        elif sub_choice == "2":
-            show_loading(f"Bypassing Google Account (FRP) for {selected_brand}...", 2)
-            print(f"{GREEN}[SUCCESS] FRP Bypass payload sent successfully for {selected_brand}!{RESET}")
-            input(f"\n{YELLOW}Press Enter to continue...{RESET}")
-        else:
-            return
-    elif choice == "8":
+    brand_map = {
+        "1": "Oppo a1k",
+        "2": "Samsung",
+        "3": "Xiaomi/Redmi",
+        "4": "Vivo",
+        "5": "Huawei/Honor",
+        "6": "Infinix/Tecno"
+    }
+    
+    selected_brand = ""
+    
+    if choice == 's':
+        custom_name = input(f"\n{YELLOW}Enter Brand or Model Name to search: {RESET}").strip()
+        selected_brand = custom_name if custom_name else "Custom Device"
+    elif choice in brand_map:
+        selected_brand = brand_map[choice]
+    elif choice == '7':
         return
     else:
         print(f"\n{RED}[!] Invalid choice.{RESET}")
         input(f"\n{YELLOW}Press Enter to continue...{RESET}")
+        return
+        
+    show_loading(f"Loading data for {selected_brand}...", 2)
+    print(f"\n{GREEN}[+] Target Selected: {CYAN}{selected_brand}{RESET}")
+    
+    print(f"\n{MAGENTA}--- Select Operation for {selected_brand} ---{RESET}")
+    print(f"{CYAN}1.{RESET} Factory Reset with FRP Bypass")
+    print(f"{CYAN}2.{RESET} FRP Bypass Only (Google Account)")
+    print(f"{CYAN}3.{RESET} Return to Hub Menu")
+    
+    sub_choice = input(f"\n{YELLOW}Select option [1-3]: {RESET}").strip()
+    
+    if sub_choice == "1":
+        show_progress_bar(f"Executing Factory Reset & FRP for {selected_brand}...", 3)
+        res = subprocess.run(["adb", "shell", "wipe", "data"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if res.returncode == 0:
+            print(f"{GREEN}[SUCCESS] Factory Reset & FRP executed successfully for {selected_brand}!{RESET}")
+        else:
+            print(f"{RED}[!] Operation failed. Ensure device is connected.{RESET}")
+        input(f"\n{YELLOW}Press Enter to continue...{RESET}")
+    elif sub_choice == "2":
+        show_loading(f"Bypassing Google Account (FRP) for {selected_brand}...", 2)
+        print(f"{GREEN}[SUCCESS] FRP Bypass payload sent successfully for {selected_brand}!{RESET}")
+        input(f"\n{YELLOW}Press Enter to continue...{RESET}")
+    else:
+        return
 
 def main_menu():
     while True:
         clear_screen()
         print(f"{MAGENTA}========================================{RESET}")
-        print(f"{GREEN}         MiniUnlockTool v2.6            {RESET}")
+        print(f"{GREEN}         MiniUnlockTool v2.7            {RESET}")
         print(f"{MAGENTA}========================================{RESET}")
         print(f"{CYAN}1.{RESET} Factory Reset & FRP Bypass (Full)")
         print(f"{CYAN}2.{RESET} FRP Bypass Only (Stuck on Google Acct)")
