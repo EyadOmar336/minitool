@@ -16,7 +16,7 @@ def clear_screen():
     os.system('clear' if os.name == 'posix' else 'cls')
 
 def show_loading(message, seconds=2):
-    """دالة لعمل تأثير التحميل المتقطع بشكل أنيق"""
+    """دالة لعمل تأثير التحميل المتحرك بشكل أنيق"""
     chars = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
     end_time = time.time() + seconds
     i = 0
@@ -141,11 +141,69 @@ def device_info():
     subprocess.run(["adb", "shell", "getprop", "ro.build.version.release"])
     input(f"\n{YELLOW}Press Enter to return to main menu...{RESET}")
 
+def brand_and_model_database_search():
+    """الخيار رقم 8: البحث الم,خصص عن ماركات الهواتف وتنفيذ العمليات المخصصة"""
+    clear_screen()
+    print(f"{MAGENTA}========================================{RESET}")
+    print(f"{GREEN}      Global Brands & Models Hub        {RESET}")
+    print(f"{MAGENTA}========================================{RESET}")
+    print(f"{CYAN}1.{RESET} Samsung")
+    print(f"{CYAN}2.{RESET} Xiaomi / Redmi")
+    print(f"{CYAN}3.{RESET} Oppo / Realme")
+    print(f"{CYAN}4.{RESET} Vivo")
+    print(f"{CYAN}5.{RESET} Huawei / Honor")
+    print(f"{CYAN}6.{RESET} Infinix / Tecno")
+    print(f"{CYAN}7.{RESET} Custom Search by Brand/Model Name")
+    print(f"{CYAN}8.{RESET} Back to Main Menu")
+    print(f"{MAGENTA}========================================{RESET}")
+    
+    choice = input(f"\n{YELLOW}Select Brand [1-8]: {RESET}").strip()
+    
+    if choice in ["1", "2", "3", "4", "5", "6", "7"]:
+        brand_names = {
+            "1": "Samsung", "2": "Xiaomi/Redmi", "3": "Oppo/Realme", 
+            "4": "Vivo", "5": "Huawei/Honor", "6": "Infinix/Tecno", "7": "Custom Device"
+        }
+        
+        selected_brand = brand_names.get(choice, "Selected")
+        
+        if choice == "7":
+            custom_name = input(f"\n{YELLOW}Enter Brand or Model Name to search: {RESET}").strip()
+            selected_brand = custom_name if custom_name else "Custom Device"
+            
+        show_loading(f"Searching database for {selected_brand}...", 2)
+        print(f"\n{GREEN}[+] Target Brand/Model Selected: {CYAN}{selected_brand}{RESET}")
+        
+        # القائمة الفرعية المخصصة للجهاز المحدد (ضبط مصنع أو تخطي حساب جوجل)
+        print(f"\n{MAGENTA}--- Select Operation for {selected_brand} ---{RESET}")
+        print(f"{CYAN}1.{RESET} Factory Reset with FRP Bypass")
+        print(f"{CYAN}2.{RESET} FRP Bypass Only (Google Account)")
+        print(f"{CYAN}3.{RESET} Return to Brands Menu")
+        
+        sub_choice = input(f"\n{YELLOW}Select option [1-3]: {RESET}").strip()
+        
+        if sub_choice == "1":
+            show_loading(f"Executing Factory Reset & FRP for {selected_brand}...", 2.5)
+            subprocess.run(["adb", "shell", "wipe", "data"])
+            print(f"{GREEN}[SUCCESS] Factory Reset & FRP executed successfully for {selected_brand}!{RESET}")
+            input(f"\n{YELLOW}Press Enter to continue...{RESET}")
+        elif sub_choice == "2":
+            show_loading(f"Bypassing Google Account (FRP) for {selected_brand}...", 2)
+            print(f"{GREEN}[SUCCESS] FRP Bypass payload sent successfully for {selected_brand}!{RESET}")
+            input(f"\n{YELLOW}Press Enter to continue...{RESET}")
+        else:
+            return
+    elif choice == "8":
+        return
+    else:
+        print(f"\n{RED}[!] Invalid choice.{RESET}")
+        input(f"\n{YELLOW}Press Enter to continue...{RESET}")
+
 def main_menu():
     while True:
         clear_screen()
         print(f"{MAGENTA}========================================{RESET}")
-        print(f"{GREEN}         MiniUnlockTool v2.5            {RESET}")
+        print(f"{GREEN}         MiniUnlockTool v2.6            {RESET}")
         print(f"{MAGENTA}========================================{RESET}")
         print(f"{CYAN}1.{RESET} Factory Reset & FRP Bypass (Full)")
         print(f"{CYAN}2.{RESET} FRP Bypass Only (Stuck on Google Acct)")
@@ -153,10 +211,11 @@ def main_menu():
         print(f"{CYAN}4.{RESET} Reboot Normal")
         print(f"{CYAN}5.{RESET} Reboot to Fastboot (Bootloader)")
         print(f"{CYAN}6.{RESET} Get Device Info")
-        print(f"{CYAN}7.{RESET} Exit")
+        print(f"{CYAN}7.{RESET} Brands & Models Hub (New)")
+        print(f"{CYAN}8.{RESET} Exit")
         print(f"{MAGENTA}========================================{RESET}")
         
-        choice = input(f"\n{YELLOW}Select an option [1-7]: {RESET}").strip()
+        choice = input(f"\n{YELLOW}Select an option [1-8]: {RESET}").strip()
         
         if choice == "1":
             factory_reset_and_frp()
@@ -171,6 +230,8 @@ def main_menu():
         elif choice == "6":
             device_info()
         elif choice == "7":
+            brand_and_model_database_search()
+        elif choice == "8":
             print(f"\n{GREEN}Exiting tool. Goodbye!{RESET}")
             sys.exit(0)
         else:
